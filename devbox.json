@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.10.7/.schema/devbox.schema.json",
+
   "packages": [
     "act@latest",
     "civo@latest",
@@ -25,16 +26,23 @@
     "procps",
     "python312@latest",
     "tilt@latest",
-    "yq-go@latest"
+    "yq-go@latest",
+
+    "kubelogin",
+    "azure-functions-core-tools",
+    "azure-cli"
   ],
+
   "shell": {
     "init_hook": [
       "export GOBIN=$(git rev-parse --show-toplevel)/bin",
       "export PATH=$GOBIN:$PATH",
-      "go install sigs.k8s.io/cloud-provider-kind@v0.2.0"
+      "go install sigs.k8s.io/cloud-provider-kind@v0.2.0",
+      "if ! command -v azd >/dev/null; then curl -fsSL https://aka.ms/install-azd.sh | bash; fi"
     ],
     "scripts": {
       "test": ["echo \"Error: no test specified\" && exit 1"]
     }
   }
 }
+

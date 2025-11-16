@@ -10,6 +10,10 @@ env:
   BORDER_FOREGROUND: "212"
   PADDING: "1 1"
   MARGIN: "1 1"
+  #set defaults para o seu ambiente azure
+  DEFAULT_LOCATION: francecentral
+  DEFAULT_RG_NAME: RG-AKS-Test
+  
 
 tasks:
   civo:00-authenticate-cli:
@@ -92,6 +96,8 @@ tasks:
       - civo firewall delete ${CLUSTER_NAME} --region ${CIVO_REGION} -y
       - civo network delete ${CLUSTER_NAME} --region ${CIVO_REGION} -y
     desc: Clean up the Civo Kubernetes cluster and associated resources
+
+# google cloud
 
   gcp:01-init-cli:
     cmds:
@@ -186,3 +192,55 @@ tasks:
     cmds:
       - kind delete cluster
     desc: Delete and existing a kind Kubernetes cluster
+
+  azure:00-authenticate-cli:
+    desc: Authenticate the Azure CLI
+    cmds:
+      - cmd: |
+          gum style "$(cat <<EOF
+          To authenticate with Azure CLI you need to:
+          ---
+          1. Have the Azure CLI installed (az)
+          2. Run the login command below
+          3. Complete the device login in your browser
+
+          🚨 NOTE: If you have multiple tenants or subscriptions,
+          you MUST select the correct one after login. 🚨
+          EOF
+          )"
+        silent: true
+
+      - cmd: gum style "Starting Azure login..."
+        silent: true
+
+      - az login
+
+      - cmd: gum style "Listing available subscriptions..."
+        silent: false
+
+      - az account list -o table
+
+      - cmd: |
+          gum style "$(cat <<EOF
+          🎯 NEXT STEP: 
+          Run the command below to set your default subscription:
+
+              az account set --subscription \"<SUBSCRIPTION_NAME or ID>\"
+
+          Without setting this, many Azure commands will fail.
+          EOF
+          )"
+        silent: true
+
+  azure:01-set-defaults:
+    cmds:
+      - | 
+        SUB=$(az account show --query id -o tsv)
+        az config set defaults.subscription=$SUB
+
+        az config set defaults.location=${DEFAULT_LOCATION}
+
+        az group create --name RG-AKS-Test
+        az config set defaults.group=${DEFAULT_RG_NAME} 
+        az config get defaults
+    desc: deixa a localização, sub e o RG defaults para não ter que especificar sempre
